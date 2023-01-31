@@ -1,0 +1,6 @@
+[C03entos7-20]
+name=Centos7-2003
+baseurl=https://buildlogs.centos.org/c7.2003.00.x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
