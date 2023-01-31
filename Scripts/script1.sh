@@ -1,50 +1,110 @@
 #!/bin/bash
 
+echo "========================================"
+echo " - Starting scrit 1 - "
+echo "========================================"
+mount -a
+
+echo "========================================"
+echo " - Settingup SELinux - "
+echo "========================================"
+setenforce 0
+sed -i 's/SELINUX=\S.*/SELINUX=disabled/g' /etc/selinux/config
+
+echo "========================================"
+echo " - Update SO - "
+echo "========================================"
+yum-config-manager -q -y --disable C7.0.2003-base >/dev/null
+sleep 1
+yum-config-manager -y -q --enable base,updates,extras,centosplus >/dev/null
+sleep 1
+yum install -y -q epel-release >/dev/null
+sleep 1
+yum -y -q update > /dev/null
+
+echo "========================================"
+echo " - Settinup SSH - "
+echo "========================================"
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+cat <<EOF | tee -a /etc/ssh/ssh_config >/dev/null
+        StrictHostKeyChecking no
+
+Host *.local
+        CheckHostIP no
+EOF
+
+echo "========================================"
+echo " - Disable swap - "
+echo "========================================"
+swapoff -a
+sed -i 's/(.+ swap .+)/d/' /etc/fstab
+rm -f /swapfile
+
+echo "========================================"
+echo " - Settinup VBguest Network - "
+echo "========================================"
 mkdir -p /etc/vbox/
 cat <<EOF > /etc/vbox/networks.conf
 * 0.0.0.0/0 ::/0
 EOF
-cat <<EOF > /etc/modules-load.d/00-vbox-modules.conf
+
+echo "========================================"
+echo " - Settinup VBguest module - "
+echo "========================================"
+cat <<EOF > /etc/modules-load.d/01-vbox-modules.conf
 vboxguest
 vboxsf
 vboxvideo
 EOF
-modprobe vboxguest
-modprobe vboxsf
-modprobe vboxvideo
-# systemctl restart vboxadd.service
-# systemctl restart vboxadd-service.service
-mount /vagrant
 
-setenforce 0
-sed -i 's/SELINUX=\S.*/SELINUX=disabled/g' /etc/selinux/config
-sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-swapoff -a
-sed -i -r 's/(.+ swap .+)/#\1/' /etc/fstab
-rm -f /swapfile
-
-cat <<EOF > /etc/modules-load.d/99-k8s-modules.conf
+echo "========================================"
+echo " - Settinup modules for kubernetes - "
+echo "========================================"
+cat <<EOF > /etc/modules-load.d/02-k8s-modules.conf
 br_netfilter
 overlay
 EOF
 modprobe br_netfilter
 modprobe overlay
 
-cat <<EOF > /etc/sysctl.d/99-k8s-sysctl.conf
+echo "========================================"
+echo " - Settinup sysctl for kernel mesages - "
+echo "========================================"
+cat <<EOF > /etc/sysctl.d/01-printk.conf
+kernel.printk = 2 4 1 7
+EOF
+
+echo "========================================"
+echo " - Settinup sysctl for kubernetes - "
+echo "========================================"
+cat <<EOF > /etc/sysctl.d/02-k8s-sysctl.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
 EOF
 sysctl -q --system
 
-systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+echo "========================================"
+echo " - Settinup suspend modes - "
+echo "========================================"
+cat <<EOF > /etc/systemd/logind.conf
+HandleLidSwitch=ignore 
+HandleLidSwitchDocked=ignore
+EOF
+systemctl -q mask sleep.target suspend.target hibernate.target hybrid-sleep.target >/dev/null
 
+echo "========================================"
+echo " - Settinup timezone - "
+echo "========================================"
 timedatectl set-timezone America/Sao_Paulo
 cp -f /vagrant/chrony.conf /etc/chrony.conf
 systemctl restart chronyd
 
-systemctl enable --now firewalld
-systemctl start firewalld
+echo "========================================"
+echo " - Settinup firewall - "
+echo "========================================"
+systemctl -q enable --now firewalld
+systemctl -q start firewalld
 firewall-cmd -q --set-default-zone=trusted
 firewall-cmd -q --permanent --zone=trusted --add-service=dhcp
 firewall-cmd -q --permanent --zone=trusted --add-service=dhcpv6-client
@@ -74,6 +134,6 @@ firewall-cmd -q --permanent --zone=trusted --add-port=10255/tcp
 firewall-cmd -q --permanent --zone=trusted --add-port=30000-32767/tcp
 firewall-cmd -q --reload
 
-yum-config-manager -q -y --disable Centos7-2003 >/dev/null 2>&1
-yum -y -q --nogpgcheck update
-sleep 1
+echo "========================================"
+echo " - Finnishing script 1 - "
+echo "========================================"
