@@ -2,3 +2,5 @@
 ImageSolutionSprint.code-workspace
 private_key
 insecure_private_key
+build.ps1
+monitor.service
