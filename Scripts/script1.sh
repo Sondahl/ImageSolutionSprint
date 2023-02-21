@@ -39,7 +39,7 @@ echo " - Settinup sysctl for kernel mesages - "
 echo "========================================"
 cat <<EOF > /etc/sysctl.d/01-printk.conf
 kernel.printk = 2 4 1 7
-EOF     
+EOF
 
 echo "========================================"
 echo "  - Settinup sysctl for kubernetes - "
