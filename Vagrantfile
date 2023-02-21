@@ -8,17 +8,11 @@ end
 
 Vagrant.configure("2") do |config|
 
-  # config.vbguest.installer_hooks[:before_install] = ["setenforce 0","sleep 1","yum-config-manager -y -q --disable base,updates,extras >/dev/null","sleep 1","echo -e '# C7.0.2003\n[C7.0.2003-base]\nname=CentOS-7.0.2003 - Base\nbaseurl=http://archive.kernel.org/centos-vault/7.8.2003/os/x86_64/\ngpgcheck=1\ngpgkey=http://archive.kernel.org/centos-vault/RPM-GPG-KEY-CentOS-7\nenabled=1' > /etc/yum.repos.d/C7.0.2003.repo","sleep 1","yum install -y autoconf kernel-devel-$(uname -r) kernel-headers-$(uname -r) dkms gcc patch libX11 libXt libXext libXmu wget","sleep 1"]
-  
-  # config.vbguest.installer_hooks[:before_install] = ["setenforce 0","sleep 1","yum install -y autoconf kernel-devel-$(uname -r) kernel-headers-$(uname -r) dkms gcc patch libX11 libXt libXext libXmu wget yum-utils","sleep 1"]
-  
-  # config.vbguest.auto_update = false
-  
-  # config.vm.box = "centos/7"
-  # config.vm.box = "centos7-2009"
   config.vm.box = "sondahl/centos7-2009"
+  config.vm.hostname = "ImgSolutionSprint"
 
   config.vm.provider "virtualbox" do |vb|
+    vb.name = "ImgSolutionSprint"
     vb.memory = 2048
     vb.cpus = 4
   end
